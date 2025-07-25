@@ -16,13 +16,14 @@ public interface DocumentRepository extends JpaRepository<Document, String> {
 
     @Query(value =
             "SELECT DATAUPDATE, NEOID, CODE, NOMEDOCUMENTO, NOME, RN " +
-                    "FROM V_DOCS_NEOMIND", nativeQuery = true)
+                    "FROM V_DOCS_NEOMIND "
+                    , nativeQuery = true)
     List<Document> getAllRegisteredDocuments();
 
     @Query(value =
             "SELECT DATAUPDATE, NEOID, CODE, NOMEDOCUMENTO, NOME, RN " +
-                    "FROM V_DOCS_NEOMIND " +
-                    "WHERE DATAUPDATE >= TRUNC(SYSDATE)", nativeQuery = true)
+                    " FROM V_DOCS_NEOMIND " +
+                    " WHERE DATAUPDATE >= TRUNC(SYSDATE)", nativeQuery = true)
     List<Document> getUpdated();
 }
 

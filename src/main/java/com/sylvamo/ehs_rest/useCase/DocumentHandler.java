@@ -16,6 +16,9 @@ import java.util.stream.Stream;
 public class DocumentHandler {
 
     @Autowired
+    private SendEmailHandler sendEmailHandler;
+
+    @Autowired
     private DocumentRepository documentRepository;
     private boolean chave = false;
 
@@ -32,19 +35,22 @@ public class DocumentHandler {
     }
 
     private static String limparNomeArquivo(String nome) {
-        return nome.replaceAll("[\\\\/:*?\"<>|]", " ").trim();
+        return nome.replaceAll("[\\\\/:*?\\\"<>|┴╟├p{Cntrl}]", " ").trim();
     }
 
 
-    @Scheduled(fixedDelay = 60000)
+    @Scheduled(fixedDelay = 120000)
     @Transactional
     public void processarNovosDocumentos() {
-        List<Document> novosDocs = documentRepository.getAllRegisteredDocuments();
+        List<Document> novosDocs = documentRepository.getUpdated();
+        System.out.println(novosDocs.size() + "Linhas Retorndas do oracle");
 
         for (Document doc : novosDocs) {
             String nome = doc.getNome();
             String nomeDocumento = doc.getNomeDocumento();
             String neoid = doc.getNeoid();
+            System.out.println(doc);
+            System.out.println( novosDocs.indexOf(doc) +"/"+ novosDocs.size());
 
             if (nome == null || nomeDocumento == null || neoid == null) {
                 System.out.printf("❗ Dados incompletos: %s%n", doc);
@@ -63,20 +69,20 @@ public class DocumentHandler {
                     Files.copy(arquivoOrigem, destinoFinal, StandardCopyOption.REPLACE_EXISTING);
                     System.out.printf("Copiado: %s para %s%n", arquivoOrigem, destinoFinal);
                     chave = true;
-                    //documentRepository.saveProcessedDocument(nomeDocumento, neoid, name);
-
+                    System.out.println(chave + " " + destinoFinal);
 
                 } else {
-                    System.out.printf("Arquivo não encontrado para NEOID: %s%n", neoid);
-                }
 
+                    System.out.printf("Arquivo não encontrado para NEOID: %s%n", neoid);
+                    System.out.println(chave + " " + arquivoOrigem);
+                }
+            } catch (InvalidPathException ipe) {
+                // ignora este documento e segue adiante
+                System.err.printf("Ignorado (nome inválido): %s → %s%n", doc.getNeoid(), nomeLimpo);
+                continue;
             } catch (IOException e) {
                 System.err.printf("Erro ao copiar arquivo para NEOID %s: %s%n", neoid, e.getMessage());
             }
-
-
-
-
         }
         if (chave) {
             try {
